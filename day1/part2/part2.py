@@ -2,7 +2,7 @@ file = open("../data.txt", "r")
 content = file.readlines()
 file.close()
 
-totalDistance = 0
+total = 0
 
 leftNumbers = []
 rightNumbers = []
@@ -14,14 +14,8 @@ for line in content:
     leftNumbers.append(a)
     rightNumbers.append(b)
 
-while len(leftNumbers) > 0:
-    a = min(leftNumbers)
-    b = min(rightNumbers)
-    totalDistance += abs(a-b)
-    leftNumbers.remove(a)
-    rightNumbers.remove(b)
+for a in leftNumbers:
+    appears = rightNumbers.count(a)
+    total += a * appears 
 
-print(totalDistance)
-
-
-    
+print(total)
