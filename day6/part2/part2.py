@@ -2,55 +2,68 @@ file = open("../data.txt", "r")
 content = file.readlines()
 file.close()
 
-rules = []
-updates = []
-locUpdate = 0
-for index, line in enumerate(content):
-    if line.strip() == "":
-        locUpdate = index + 1
-        break
-    rules.append(line.strip().split('|'))
+map = []
 
-for line in content[locUpdate:]:
-    updates.append(line.strip())
+for line in content:
+    map.append(list(line.strip()))
 
-correctUpdates = []
-for update in updates:
-    updateBlocks = update.split(',')
-    badUpdate = False
-    for index, x in enumerate(updateBlocks):
-        for rule in rules:
-            if x == rule[0]:
-                if rule[1] in updateBlocks:
-                    if rule[1] not in updateBlocks[index+1:]:
-                        badUpdate = True
-                        break
-            if index > 0:
-                if x == rule[1]:
-                    if rule[0] in updateBlocks:
-                        if rule[0] not in updateBlocks[:index+1]:
-                            badUpdate = True
-                            break
-    if badUpdate:
-        correctUpdates.append(update)
+global guard
+def find_guard(grid):
+    global guard
+    for y, row in enumerate(grid):
+        for x, cell in enumerate(row):
+            if cell in ['^', '>', 'v', '<']:
+                return x, y, cell
+    raise ValueError("Geen guard gevonden in de map")
 
-orderedCorrectUpdates = []
-for update in correctUpdates:
-    correctOrder = update.split(',').copy()
-    swapped = True
-    while swapped:
-        swapped = False
-        for x in correctOrder:
-            for rule in rules:
-                if x == rule[0] and rule[1] in correctOrder:
-                    a = correctOrder.index(rule[0])
-                    b = correctOrder.index(rule[1])
-                    if a > b:
-                        correctOrder[a], correctOrder[b] = correctOrder[b], correctOrder[a]
-                        swapped = True
-    orderedCorrectUpdates.append(correctOrder)
+
+
 
 total = 0
-for update in orderedCorrectUpdates:
-    total += int(update[len(update)//2])
+
+rotations = ['^','>','v','<']
+startX, startY, startArrow = find_guard(map)
+originalMap = [row.copy() for row in map]
+for i, row in enumerate(map):
+        for j, cell in enumerate(row):
+            if map[i][j] in rotations or map[i][j] == '#':
+                continue
+            map[i][j] = '#'
+            visited = set()
+            x = startX
+            y = startY
+            arrow = startArrow
+            rotation = rotations.index(arrow)
+            guard = True
+            while guard:
+                status = (x,y, arrow)
+                if status in visited:
+                    total+=1
+                    break
+                visited.add(status)
+                dx, dy = {
+                    '^': (0, -1),
+                    '>': (1, 0),
+                    'v': (0, 1),
+                    '<': (-1, 0)
+                }[arrow]
+
+                nx = x + dx
+                ny = y + dy
+
+                if not (0 <= nx < len(map[0]) and 0 <= ny < len(map)):
+                    guard = False
+                    break
+                if map[ny][nx] in ['.','X']:
+                    map[y][x] = 'X'
+                    map[ny][nx] = arrow
+                    x, y = nx, ny
+                elif map[ny][nx] == '#':
+                    if rotation < 3:
+                        rotation += 1
+                    else:
+                        rotation = 0
+                    map[y][x] = arrow = rotations[rotation]
+            map = [row.copy() for row in originalMap]
+
 print(total)
